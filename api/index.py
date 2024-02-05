@@ -20,7 +20,7 @@ USER_AGENTS = [
 class handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
-        # Display the form with AJAX for asynchronous submission
+        # Display the form with AJAX for asynchronous submission and input clearing
         html_form = """
         <html>
         <head>
@@ -28,12 +28,14 @@ class handler(BaseHTTPRequestHandler):
             <script>
             function fetchContent() {
                 var xhr = new XMLHttpRequest();
-                var url = document.getElementById('url').value; // Get the URL from the input field
+                var urlField = document.getElementById('url'); // Get the input field
+                var url = urlField.value; // Get the URL from the input field
                 xhr.open("POST", "/", true);
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         document.getElementById('result').innerHTML = this.responseText; // Display the response
+                        urlField.value = ''; // Clear the input field after displaying the response
                     }
                 };
                 var data = "url=" + encodeURIComponent(url);
@@ -55,6 +57,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(html_form.encode())
+
 
 
     def do_POST(self):
