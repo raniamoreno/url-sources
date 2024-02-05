@@ -3,7 +3,9 @@ from urllib.parse import parse_qs
 import os
 import requests
 from bs4 import BeautifulSoup
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 class handler(BaseHTTPRequestHandler):
     
@@ -43,8 +45,6 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(response_message.encode())
 
 def fetch_and_parse_content(url):
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-    
     try:
         # Fetch the HTML content
         response = requests.get(url)
@@ -58,9 +58,9 @@ def fetch_and_parse_content(url):
         # Construct the OpenAI prompt
         prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
         
-        # Send the prompt to the OpenAI API using the corrected method for the new interface
-        response = openai.Completion.create(
-            model="text-davinci-003",  # Or use the appropriate model for your task
+        # Send the prompt to the OpenAI API using the new client method
+        completion = client.completions.create(
+            model="text-davinci-003",  # Use an appropriate model
             prompt=prompt,
             temperature=0.5,
             max_tokens=150,
@@ -69,8 +69,11 @@ def fetch_and_parse_content(url):
             presence_penalty=0.0
         )
         
-        # Extracting text response correctly
-        return response.get('choices', [{}])[0].get('text', '').strip()
+        # Handling the response with the new API
+        # Extracting the first choice's text
+        parsed_response = completion.choices[0].text.strip()
+        
+        return parsed_response
 
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
