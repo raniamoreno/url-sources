@@ -8,12 +8,27 @@ from urllib.parse import parse_qs
 # Instantiate the OpenAI client with your API key
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-class Handler(BaseHTTPRequestHandler):
+class handler(BaseHTTPRequestHandler):
+    
     def do_GET(self):
-        # Display the form (HTML omitted for brevity)
-        pass
+        # Display the form
+        html_form = """
+        <html>
+        <body>
+        <form action="/" method="post">
+          URL: <input type="text" name="url">
+          <input type="submit" value="Fetch and Parse">
+        </form>
+        </body>
+        </html>
+        """
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html_form.encode())
 
     def do_POST(self):
+        # Parse posted data
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         parsed_data = parse_qs(post_data)
@@ -21,17 +36,14 @@ class Handler(BaseHTTPRequestHandler):
 
         if url:
             parsed_content = fetch_and_parse_content(url)
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
             response_message = f"<pre>{parsed_content}</pre>"
-            self.wfile.write(response_message.encode())
         else:
-            self.send_response(400)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
             response_message = "URL not provided."
-            self.wfile.write(response_message.encode())
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(response_message.encode())
 
 def fetch_and_parse_content(url):
     try:
