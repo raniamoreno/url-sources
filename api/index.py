@@ -22,43 +22,52 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # Display the form with AJAX for asynchronous submission and input clearing
         html_form = """
-        <html>
+       <!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Web Parser</title>
     <script>
-    function fetchContent() {
-        var xhr = new XMLHttpRequest();
-        var urlField = document.getElementById('url');
-        xhr.open("POST", "/", true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var resultContent = document.getElementById('resultContent');
-                resultContent.textContent = this.responseText; // Sets the response text
-                urlField.value = ''; // Clears the input field
+        // Function to handle form submission
+        function fetchContent() {
+            var xhr = new XMLHttpRequest();
+            var urlField = document.getElementById('url'); // Get the input field
+            var url = urlField.value; // Get the URL from the input field
+            xhr.open("POST", "/", true); // Assuming your server expects POST requests
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    updateResult(this.responseText); // Update the result area
+                    urlField.value = ''; // Clear the input field
+                }
+            };
+            xhr.send("url=" + encodeURIComponent(url));
+            return false; // Prevent default form submission
+        }
 
-                var copyBtn = document.getElementById('copyButton') || createCopyButton();
-                copyBtn.onclick = function() {
-                    navigator.clipboard.writeText(resultContent.textContent).then(function() {
-                        console.log('Result copied to clipboard!');
-                    }, function(err) {
-                        console.error('Could not copy text:', err);
-                    });
-                };
-            }
-        };
-        var data = "url=" + encodeURIComponent(urlField.value);
-        xhr.send(data);
-        return false; // Prevents default form submission
-    }
+        // Function to update the result area
+        function updateResult(text) {
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = ''; // Clear previous content
 
-    function createCopyButton() {
-        var copyBtn = document.createElement('button');
-        copyBtn.textContent = 'Copy Result';
-        copyBtn.id = 'copyButton';
-        document.getElementById('result').appendChild(copyBtn);
-        return copyBtn;
-    }
+            var pre = document.createElement('pre');
+            pre.textContent = text; // Set text content to preserve formatting
+
+            resultDiv.appendChild(pre); // Append the <pre> element to the result div
+
+            // Create or update the Copy Result button
+            var copyBtn = document.getElementById('copyButton') || document.createElement('button');
+            copyBtn.textContent = 'Copy Result';
+            copyBtn.id = 'copyButton';
+            copyBtn.onclick = function() {
+                navigator.clipboard.writeText(pre.textContent).then(function() {
+                    console.log('Result copied to clipboard!');
+                }, function(err) {
+                    console.error('Could not copy text:', err);
+                });
+            };
+            resultDiv.appendChild(copyBtn); // Append or re-append the button to resultDiv
+        }
     </script>
 </head>
 <body>
@@ -67,10 +76,11 @@ class handler(BaseHTTPRequestHandler):
         <input type="submit" value="Fetch and Parse">
     </form>
     <div id="result">
-        <pre id="resultContent"></pre>
+        <!-- Result and Copy Result button will be dynamically inserted here -->
     </div>
 </body>
 </html>
+
 
         """
         self.send_response(200)
