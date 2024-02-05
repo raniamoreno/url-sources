@@ -57,7 +57,7 @@ def fetch_and_parse_content(url):
         title = soup.title.string if soup.title else "Title Not Found"
         
         # Construct the prompt for the Chat Completion API
-        prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
+        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date into a single line in the format: 'URL Title, Website Name Publication Date'."
 
         # Use the instantiated client to send the prompt
         completion = client.completions.create(
