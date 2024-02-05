@@ -1,10 +1,10 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-import openai
+from openai import OpenAI
 
 # Instantiate the OpenAI client with your API key
-client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 def fetch_and_parse_content(url):
     try:
