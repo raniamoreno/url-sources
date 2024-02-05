@@ -58,18 +58,16 @@ def fetch_and_parse_content(url):
         # Construct the OpenAI prompt
         prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
         
-        # Send the prompt to the OpenAI API
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # Adjust to the current model
-            prompt=prompt,
-            temperature=0.5,
-            max_tokens=150,
-            top_p=1.0,
-            frequency_penalty=0.0,
-            presence_penalty=0.0
+        # Send the prompt to the OpenAI API using the updated interface
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Adjust to the current model
+            messages=[
+                {"role": "system", "content": "Extract the website name, article title, and publication date from the following URL and title."},
+                {"role": "user", "content": prompt}
+            ]
         )
         
-        return response.choices[0].text.strip()
+        return response.choices[0].message['content'].strip()
 
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
