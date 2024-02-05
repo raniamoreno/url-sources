@@ -60,7 +60,7 @@ def fetch_and_parse_content(url):
         
         # Send the prompt to the OpenAI API using the new client method
         completion = client.completions.create(
-            model="text-davinci-003",  # Use an appropriate model
+            model="gpt-4-turbo-preview",  # Specify the GPT-4 Turbo model
             prompt=prompt,
             temperature=0.5,
             max_tokens=150,
