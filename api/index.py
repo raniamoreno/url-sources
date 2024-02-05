@@ -1,16 +1,21 @@
 import os
 import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
+from openai import OpenAI
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs
-from openai import OpenAI
+import random  # For user-agent rotation
 
 # Instantiate the OpenAI client with your API key
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+# Define a list of user-agents to rotate through
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
+    # Add more user-agents as needed
+]
 
 class handler(BaseHTTPRequestHandler):
     
@@ -32,18 +37,14 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(html_form.encode())
 
     def do_POST(self):
-        # Parse posted data
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         parsed_data = parse_qs(post_data)
         url = parsed_data.get('url', [None])[0]
 
         if url:
-            try:
-                parsed_content = fetch_and_parse_content(url)
-                response_message = f"<pre>{parsed_content}</pre>"
-            except Exception as e:
-                response_message = f"Error processing the request: {e}"
+            parsed_content = fetch_and_parse_content(url)
+            response_message = f"<pre>{parsed_content}</pre>"
         else:
             response_message = "URL not provided."
         
@@ -53,45 +54,22 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(response_message.encode())
 
 def fetch_and_parse_content(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-    }
+    # Rotate user-agent for each request
+    headers = {'User-Agent': random.choice(USER_AGENTS)}
+    
+    # Use session for maintaining cookies and state across requests
+    session = requests.Session()
+    session.headers.update(headers)
+    
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Check for HTTP request errors
+        response = session.get(url)
+        response.raise_for_status()  # Checks for HTTP request errors
         html_content = response.text
-    except requests.RequestException as e:
-        # If requests encounters an HTTP error
-        return f"Error fetching the page with requests: {e}"
-
-    try:
-        if "robot" in html_content.lower() or not html_content:
-            raise ValueError("Robot check detected or empty response, using Selenium as a fallback.")
-    except ValueError as e:
-        # Fallback to Selenium for complex bot protection or empty response from requests
-        try:
-            options = Options()
-            options.headless = True
-            options.add_argument("--window-size=1920,1080")
-            options.add_argument(f"user-agent={headers['User-Agent']}")
-            
-            service = ChromeService(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=service, options=options)
-            driver.get(url)
-            html_content = driver.page_source
-            driver.quit()
-        except Exception as selenium_error:
-            return f"Error fetching the page with Selenium: {selenium_error}"
-
-    try:
-        # Parse the HTML content
+        
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Construct the prompt for the Chat Completion API
         prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date into a single line in the format: 'URL Title, Website Name Publication Date'."
-        
-        # Use the instantiated client to send the prompt
         completion = client.completions.create(
             model="gpt-3.5-turbo-instruct",
             prompt=prompt,
@@ -99,9 +77,11 @@ def fetch_and_parse_content(url):
             max_tokens=150
         )
         
-        # Extract the assistant's response from the completion
         parsed_response = completion.choices[0].text.strip()
         
         return parsed_response
+
+    except requests.RequestException as e:
+        return f"Error fetching the page: {e}"
     except Exception as e:
-        return f"Error processing the content or OpenAI API call: {e}"
+        return f"Error processing the request: {e}"
