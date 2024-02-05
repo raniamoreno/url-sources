@@ -22,57 +22,56 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # Display the form with AJAX for asynchronous submission and input clearing
         html_form = """
-            <html>
-                <head>
-                    <title>Web Parser</title>
-                    <script>
-                    function fetchContent() {
-                        var xhr = new XMLHttpRequest();
-                        var urlField = document.getElementById('url'); // Get the input field
-                        var url = urlField.value; // Get the URL from the input field
-                        xhr.open("POST", "/", true);
-                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                        xhr.onreadystatechange = function () {
-                            if (xhr.readyState === 4 && xhr.status === 200) {
-                                var resultContent = document.getElementById('resultContent');
-                                resultContent.textContent = this.responseText; // Correctly sets text without HTML
-                                urlField.value = ''; // Clear the input field after displaying the response
-                                
-                                // Check if the Copy Result button exists, if not, create it
-                                var copyBtn = document.getElementById('copyButton');
-                                if (!copyBtn) {
-                                    copyBtn = document.createElement('button');
-                                    copyBtn.textContent = 'Copy Result';
-                                    copyBtn.id = 'copyButton';
-                                    document.getElementById('result').appendChild(copyBtn); // Append button to the result div
-                                }
-                                
-                                // Set onclick function to copy textContent of resultContent
-                                copyBtn.onclick = function() {
-                                    navigator.clipboard.writeText(resultContent.textContent).then(function() {
-                                        alert('Result copied to clipboard!');
-                                    }, function(err) {
-                                        console.error('Could not copy text: ', err);
-                                    });
-                                };
-                            }
-                        };
-                        var data = "url=" + encodeURIComponent(url);
-                        xhr.send(data);
-                        return false; // Prevent default form submission
-                    }
-                    </script>
-                </head>
-                <body>
-                    <form onsubmit="return fetchContent();">
-                        URL: <input type="text" id="url" name="url">
-                        <input type="submit" value="Fetch and Parse">
-                    </form>
-                    <div id="result">
-                        <pre id="resultContent"></pre> <!-- Display result here -->
-                    </div>
-                </body>
-                </html>
+        <html>
+<head>
+    <title>Web Parser</title>
+    <script>
+    function fetchContent() {
+        var xhr = new XMLHttpRequest();
+        var urlField = document.getElementById('url');
+        xhr.open("POST", "/", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var resultContent = document.getElementById('resultContent');
+                resultContent.textContent = this.responseText; // Sets the response text
+                urlField.value = ''; // Clears the input field
+
+                var copyBtn = document.getElementById('copyButton') || createCopyButton();
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(resultContent.textContent).then(function() {
+                        console.log('Result copied to clipboard!');
+                    }, function(err) {
+                        console.error('Could not copy text:', err);
+                    });
+                };
+            }
+        };
+        var data = "url=" + encodeURIComponent(urlField.value);
+        xhr.send(data);
+        return false; // Prevents default form submission
+    }
+
+    function createCopyButton() {
+        var copyBtn = document.createElement('button');
+        copyBtn.textContent = 'Copy Result';
+        copyBtn.id = 'copyButton';
+        document.getElementById('result').appendChild(copyBtn);
+        return copyBtn;
+    }
+    </script>
+</head>
+<body>
+    <form onsubmit="return fetchContent();">
+        URL: <input type="text" id="url" name="url">
+        <input type="submit" value="Fetch and Parse">
+    </form>
+    <div id="result">
+        <pre id="resultContent"></pre>
+    </div>
+</body>
+</html>
+
         """
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
