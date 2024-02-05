@@ -69,7 +69,7 @@ def fetch_and_parse_content(url):
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date into a single line in the format: 'URL Title, Website Name Publication Date'."
+        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date into a single line in the exact format: URL Title, Website Name Publication Date."
         completion = client.completions.create(
             model="gpt-3.5-turbo-instruct",
             prompt=prompt,
