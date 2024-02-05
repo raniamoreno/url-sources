@@ -98,7 +98,7 @@ class handler(BaseHTTPRequestHandler):
 
         if url:
             parsed_content = fetch_and_parse_content(url)
-            response_message = f"<pre>{parsed_content}</pre>"
+            response_message = f"{parsed_content}"
         else:
             response_message = "URL not provided."
         
