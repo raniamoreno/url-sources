@@ -23,34 +23,47 @@ class handler(BaseHTTPRequestHandler):
         # Display the form with AJAX for asynchronous submission and input clearing
         html_form = """
         <html>
-        <head>
-            <title>Web Parser</title>
-            <script>
-            function fetchContent() {
-                var xhr = new XMLHttpRequest();
-                var urlField = document.getElementById('url'); // Get the input field
-                var url = urlField.value; // Get the URL from the input field
-                xhr.open("POST", "/", true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        document.getElementById('result').innerHTML = this.responseText; // Display the response
-                        urlField.value = ''; // Clear the input field after displaying the response
-                    }
-                };
-                var data = "url=" + encodeURIComponent(url);
-                xhr.send(data);
-                return false; // Prevent form from submitting traditionally
-            }
-            </script>
-        </head>
-        <body>
-            <form onsubmit="return fetchContent();">
-                URL: <input type="text" id="url" name="url">
-                <input type="submit" value="Fetch and Parse">
-            </form>
-            <div id="result"></div> <!-- Placeholder for the response -->
-        </body>
+            <head>
+                <title>Web Parser</title>
+                <script>
+                function fetchContent() {
+                    var xhr = new XMLHttpRequest();
+                    var urlField = document.getElementById('url'); // Get the input field
+                    var url = urlField.value; // Get the URL from the input field
+                    xhr.open("POST", "/", true);
+                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4 && xhr.status === 200) {
+                            var resultDiv = document.getElementById('result');
+                            resultDiv.innerHTML = this.responseText; // Display the response
+                            urlField.value = ''; // Clear the input field after displaying the response
+                            
+                            // Add a copy button next to the result
+                            var copyBtn = document.createElement('button');
+                            copyBtn.textContent = 'Copy Result';
+                            copyBtn.onclick = function() { // Copy result text to clipboard
+                                navigator.clipboard.writeText(resultDiv.innerText).then(function() {
+                                    console.log('Copying to clipboard was successful!');
+                                }, function(err) {
+                                    console.error('Could not copy text: ', err);
+                                });
+                            };
+                            resultDiv.appendChild(copyBtn);
+                        }
+                    };
+                    var data = "url=" + encodeURIComponent(url);
+                    xhr.send(data);
+                    return false; // Prevent form from submitting traditionally
+                }
+                </script>
+            </head>
+            <body>
+                <form onsubmit="return fetchContent();">
+                    URL: <input type="text" id="url" name="url">
+                    <input type="submit" value="Fetch and Parse">
+                </form>
+                <div id="result"></div> <!-- Placeholder for the response -->
+            </body>
         </html>
         """
         self.send_response(200)
