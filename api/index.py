@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import openai
 
-# Initialize OpenAI client with the API key
+# Ensure you've set the OPENAI_API_KEY in your environment variables
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 class handler(BaseHTTPRequestHandler):
@@ -46,7 +46,7 @@ class handler(BaseHTTPRequestHandler):
 def fetch_and_parse_content(url):
     try:
         response = requests.get(url)
-        response.raise_for_status()
+        response.raise_for_status()  # Check for HTTP request errors
         html_content = response.text
         
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -54,16 +54,16 @@ def fetch_and_parse_content(url):
         
         prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
         
+        # Adapted for the latest SDK version
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Adjust the model as needed
-            messages=[{"role": "system", "content": "Extract information."},
-                      {"role": "user", "content": prompt}],
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.5,
             max_tokens=150
         )
         
-        # Assuming the first choice's text is the desired output
-        parsed_response = completion.choices[0].message['content'].strip()
+        # Adjusted response handling according to the new SDK structure
+        parsed_response = completion.choices[0].message['content'] if completion.choices else "No response generated."
         
         return parsed_response
 
@@ -71,4 +71,3 @@ def fetch_and_parse_content(url):
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
-
