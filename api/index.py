@@ -1,14 +1,40 @@
 import os
+import requests
+from bs4 import BeautifulSoup
 import openai
 
-# Setup your OpenAI API key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Instantiate the OpenAI client with your API key
+client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-# Use the `Completion` class for making a request
-response = openai.Completion.create(
-  engine="text-davinci-003",  # Make sure to use an engine compatible with your SDK version
-  prompt="This is a test prompt.",
-  max_tokens=50
-)
+def fetch_and_parse_content(url):
+    try:
+        # Fetch the HTML content
+        response = requests.get(url)
+        response.raise_for_status()  # Checks for HTTP request errors
+        html_content = response.text
+        
+        # Extract the title using BeautifulSoup for accuracy
+        soup = BeautifulSoup(html_content, 'html.parser')
+        title = soup.title.string if soup.title else "Title Not Found"
+        
+        # Construct the prompt for the Chat Completion API
+        messages = [{"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."}]
+        
+        # Use the instantiated client to send the prompt
+        completion = client.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Adjust the model as needed
+            messages=messages,
+            temperature=0.5,
+            max_tokens=150
+        )
+        
+        # Extract the assistant's response from the completion
+        parsed_response = completion.choices[0].message['content'].strip()
+        
+        return parsed_response
 
-print(response.choices[0].text)
+    except requests.RequestException as e:
+        return f"Error fetching the page: {e}"
+    except Exception as e:
+        return f"Error processing the request: {e}"
