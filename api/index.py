@@ -61,7 +61,7 @@ def fetch_and_parse_content(url):
 
         # Use the instantiated client to send the prompt
         completion = client.completions.create(
-            model="text-davinci-003",  # Adjust the model as needed
+            model="gpt-3.5-turbo-instruct",  # Adjust the model as needed
             prompt=prompt,
             temperature=0.5,
             max_tokens=150
