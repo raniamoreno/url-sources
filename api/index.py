@@ -2,6 +2,8 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from openai import OpenAI
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs
 
 # Instantiate the OpenAI client with your API key
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
