@@ -34,21 +34,25 @@ class handler(BaseHTTPRequestHandler):
                     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4 && xhr.status === 200) {
-                            var resultDiv = document.getElementById('result');
-                            resultDiv.innerHTML = this.responseText; // Display the response
-                            urlField.value = ''; // Clear the input field after displaying the response
+                            var resultContent = document.getElementById('resultContent');
+                            resultContent.textContent = this.responseText; // Display the response
+                            urlField.value = ''; // Clear the input field
                             
-                            // Add a copy button next to the result
-                            var copyBtn = document.createElement('button');
-                            copyBtn.textContent = 'Copy Result';
-                            copyBtn.onclick = function() { // Copy result text to clipboard
-                                navigator.clipboard.writeText(resultDiv.innerText).then(function() {
-                                    console.log('Copying to clipboard was successful!');
-                                }, function(err) {
-                                    console.error('Could not copy text: ', err);
-                                });
-                            };
-                            resultDiv.appendChild(copyBtn);
+                            // Ensure the Copy Result button is only added once
+                            var copyBtn = document.getElementById('copyButton');
+                            if (!copyBtn) { // If the button doesn't exist, create it
+                                copyBtn = document.createElement('button');
+                                copyBtn.id = 'copyButton';
+                                copyBtn.textContent = 'Copy Result';
+                                copyBtn.onclick = function() { // Copy result text to clipboard
+                                    navigator.clipboard.writeText(resultContent.textContent).then(function() {
+                                        console.log('Copying to clipboard was successful!');
+                                    }, function(err) {
+                                        console.error('Could not copy text: ', err);
+                                    });
+                                };
+                                document.getElementById('result').appendChild(copyBtn);
+                            }
                         }
                     };
                     var data = "url=" + encodeURIComponent(url);
@@ -62,7 +66,10 @@ class handler(BaseHTTPRequestHandler):
                     URL: <input type="text" id="url" name="url">
                     <input type="submit" value="Fetch and Parse">
                 </form>
-                <div id="result"></div> <!-- Placeholder for the response -->
+                <div id="result">
+                    <pre id="resultContent"></pre> <!-- Container for the result content -->
+                    <!-- The Copy Result button will be added dynamically next to this div -->
+                </div>
             </body>
         </html>
         """
