@@ -1,3 +1,4 @@
+from openai.openai_object import OpenAIObject
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 import os
@@ -46,34 +47,36 @@ class handler(BaseHTTPRequestHandler):
 
 def fetch_and_parse_content(url):
     try:
-        # Fetch the HTML content
+        # Fetch the HTML content of the URL
         response = requests.get(url)
-        response.raise_for_status()  # Check for HTTP request errors
+        response.raise_for_status()  # Ensure the request was successful
         html_content = response.text
         
-        # Extract the title using BeautifulSoup for accuracy
+        # Use BeautifulSoup to extract the page title for accuracy
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Construct the OpenAI prompt
-        prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
+        # Construct the prompt for the Chat Completion API
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."}
+        ]
         
-        # Send the prompt to the OpenAI API using the new client method
-        completion = client.completions.create(
-            model="text-davinci-003",  # Specify the GPT-4 Turbo model
-            prompt=prompt,
+        # Use the Chat Completions API to process the prompt
+        completion = client.chat_completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
             temperature=0.5,
-            max_tokens=150,
-            top_p=1.0,
-            frequency_penalty=0.0,
-            presence_penalty=0.0
+            max_tokens=150
         )
         
-        # Handling the response with the new API
-        # Extracting the first choice's text
-        parsed_response = completion.choices[0].text.strip()
+        # Extract the assistant's response from the completion
+        if isinstance(completion, OpenAIObject):
+            completion = completion.get('choices', [{}])[0].get('message', {'content': ''}).get('content', '').strip()
+        else:  # Fallback in case the response structure is not as expected
+            completion = "Failed to parse the response correctly."
         
-        return parsed_response
+        return completion
 
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
