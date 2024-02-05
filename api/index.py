@@ -1,5 +1,6 @@
 import os
 import requests
+import openai
 from bs4 import BeautifulSoup
 from openai import OpenAI
 
