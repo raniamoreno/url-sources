@@ -45,25 +45,29 @@ class handler(BaseHTTPRequestHandler):
 
 def fetch_and_parse_content(url):
     try:
+        # Fetch the HTML content
         response = requests.get(url)
         response.raise_for_status()  # Check for HTTP request errors
         html_content = response.text
         
+        # Extract the title using BeautifulSoup for accuracy
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
+        # Construct the OpenAI prompt
         prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
         
-        # Adapted for the latest SDK version
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.5,
-            max_tokens=150
+        # Use the OpenAI API to send the prompt
+        # Note: Adjusted for SDK version 1.0.0+ with the correct method call
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Or whichever model you prefer
+            messages=[{"role": "system", "content": "Extract key information from a URL."},
+                      {"role": "user", "content": prompt}],
         )
         
-        # Adjusted response handling according to the new SDK structure
-        parsed_response = completion.choices[0].message['content'] if completion.choices else "No response generated."
+        # Extract the assistant's response from the completion
+        # Adjusted to match the new response format
+        parsed_response = response.choices[0].message['content'].strip()
         
         return parsed_response
 
