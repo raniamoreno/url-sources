@@ -49,7 +49,7 @@ def fetch_and_parse_content(url):
                     {"role": "user", "content": f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."}]
         
         # Use the instantiated client to send the prompt
-        completion = client.ChatCompletion.create(
+        completion = client.completions.create(
             model="gpt-3.5-turbo",  # Adjust the model as needed
             messages=messages,
             temperature=0.5,
