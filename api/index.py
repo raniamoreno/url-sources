@@ -57,13 +57,12 @@ def fetch_and_parse_content(url):
         title = soup.title.string if soup.title else "Title Not Found"
         
         # Construct the prompt for the Chat Completion API
-        messages = [{"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."}]
-        
+        prompt = f"Given the URL '{url}', with the title '{title}', extract and format the website name, article title, and publication date in the following format: URL, Title, Website Name, Publication Date."
+
         # Use the instantiated client to send the prompt
         completion = client.completions.create(
             model="gpt-3.5-turbo",  # Adjust the model as needed
-            messages=messages,
+            prompt=prompt,
             temperature=0.5,
             max_tokens=150
         )
