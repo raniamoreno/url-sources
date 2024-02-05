@@ -20,14 +20,34 @@ USER_AGENTS = [
 class handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
-        # Display the form
+        # Display the form with AJAX for asynchronous submission
         html_form = """
         <html>
+        <head>
+            <title>Web Parser</title>
+            <script>
+            function fetchContent() {
+                var xhr = new XMLHttpRequest();
+                var url = document.getElementById('url').value; // Get the URL from the input field
+                xhr.open("POST", "/", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        document.getElementById('result').innerHTML = this.responseText; // Display the response
+                    }
+                };
+                var data = "url=" + encodeURIComponent(url);
+                xhr.send(data);
+                return false; // Prevent form from submitting traditionally
+            }
+            </script>
+        </head>
         <body>
-        <form action="/" method="post">
-          URL: <input type="text" name="url">
-          <input type="submit" value="Fetch and Parse">
-        </form>
+            <form onsubmit="return fetchContent();">
+                URL: <input type="text" id="url" name="url">
+                <input type="submit" value="Fetch and Parse">
+            </form>
+            <div id="result"></div> <!-- Placeholder for the response -->
         </body>
         </html>
         """
@@ -35,6 +55,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(html_form.encode())
+
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
@@ -52,6 +73,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(response_message.encode())
+
 
 def fetch_and_parse_content(url):
     # Rotate user-agent for each request
