@@ -26,40 +26,40 @@ class handler(BaseHTTPRequestHandler):
             <head>
                 <title>Web Parser</title>
                 <script>
-                function fetchContent() {
-                    var xhr = new XMLHttpRequest();
-                    var urlField = document.getElementById('url'); // Get the input field
-                    var url = urlField.value; // Get the URL from the input field
-                    xhr.open("POST", "/", true);
-                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState === 4 && xhr.status === 200) {
-                            var resultContent = document.getElementById('resultContent');
-                            resultContent.textContent = this.responseText; // Display the response
-                            urlField.value = ''; // Clear the input field
-                            
-                            // Ensure the Copy Result button is only added once
-                            var copyBtn = document.getElementById('copyButton');
-                            if (!copyBtn) { // If the button doesn't exist, create it
-                                copyBtn = document.createElement('button');
-                                copyBtn.id = 'copyButton';
-                                copyBtn.textContent = 'Copy Result';
-                                copyBtn.onclick = function() { // Copy result text to clipboard
-                                    navigator.clipboard.writeText(resultContent.textContent).then(function() {
-                                        console.log('Copying to clipboard was successful!');
-                                    }, function(err) {
-                                        console.error('Could not copy text: ', err);
-                                    });
-                                };
-                                document.getElementById('result').appendChild(copyBtn);
+                    function fetchContent() {
+                        var xhr = new XMLHttpRequest();
+                        var urlField = document.getElementById('url'); // Get the input field
+                        var url = urlField.value; // Get the URL from the input field
+                        xhr.open("POST", "/", true);
+                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === 4 && xhr.status === 200) {
+                                var resultContent = document.getElementById('resultContent');
+                                resultContent.textContent = this.responseText; // Display the response as text, not HTML
+                                urlField.value = ''; // Clear the input field
+
+                                // Ensure the Copy Result button is only added once
+                                var copyBtn = document.getElementById('copyButton');
+                                if (!copyBtn) { // If the button doesn't exist, create it
+                                    copyBtn = document.createElement('button');
+                                    copyBtn.id = 'copyButton';
+                                    copyBtn.textContent = 'Copy Result';
+                                    copyBtn.onclick = function() { // Copy result text to clipboard
+                                        navigator.clipboard.writeText(resultContent.textContent).then(function() {
+                                            console.log('Copying to clipboard was successful!');
+                                        }, function(err) {
+                                            console.error('Could not copy text: ', err);
+                                        });
+                                    };
+                                    document.getElementById('result').appendChild(copyBtn);
+                                }
                             }
-                        }
-                    };
-                    var data = "url=" + encodeURIComponent(url);
-                    xhr.send(data);
-                    return false; // Prevent form from submitting traditionally
-                }
-                </script>
+                        };
+                        var data = "url=" + encodeURIComponent(url);
+                        xhr.send(data);
+                        return false; // Prevent form from submitting traditionally
+                    }
+                    </script>
             </head>
             <body>
                 <form onsubmit="return fetchContent();">
