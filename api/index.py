@@ -84,7 +84,16 @@ class handler(BaseHTTPRequestHandler):
         <script>
             function fetchContent() {
                 var xhr = new XMLHttpRequest();
-                var urlField = document.getElementById('url');
+                var urlField = document.getElementById('url'); // Make sure this ID matches your input field
+                if (!urlField) {
+                    console.error('URL input field not found');
+                    return false; // Exit if the URL field is not found
+                }
+                var url = urlField.value; // This should be the URL as a string
+                if (!url) {
+                    console.error('No URL entered');
+                    return; // Exit if the URL is empty
+                }
                 xhr.open("POST", "/", true);
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                 xhr.onreadystatechange = function() {
@@ -93,9 +102,10 @@ class handler(BaseHTTPRequestHandler):
                         urlField.value = ''; // Clear the input field after displaying the result
                     }
                 };
-                xhr.send("url=" + encodeURIComponent(url));
+                xhr.send("url=" + encodeURIComponent(url)); // Ensure this concatenation results in a proper string
                 return false; // Prevent default form submission
             }
+
 
             function updateResult(text) {
                 var resultDiv = document.getElementById('result');
