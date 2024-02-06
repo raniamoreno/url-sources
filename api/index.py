@@ -84,27 +84,20 @@ class handler(BaseHTTPRequestHandler):
         <script>
             function fetchContent() {
                 var xhr = new XMLHttpRequest();
-                var urlField = document.getElementById('url'); // Make sure this ID matches your input field
-                if (!urlField) {
-                    console.error('URL input field not found');
-                    return false; // Exit if the URL field is not found
-                }
-                var url = urlField.value; // This should be the URL as a string
-                if (!url) {
-                    console.error('No URL entered');
-                    return; // Exit if the URL is empty
-                }
+                var urlField = document.getElementById('url'); // Correctly gets the URL input field
+                var url = urlField.value; // Correctly gets the value of the input field
                 xhr.open("POST", "/", true);
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         updateResult(this.responseText);
-                        urlField.value = ''; // Clear the input field after displaying the result
+                        urlField.value = ''; // Clears the input field after displaying the result
                     }
                 };
-                xhr.send("url=" + encodeURIComponent(url)); // Ensure this concatenation results in a proper string
-                return false; // Prevent default form submission
+                xhr.send("url=" + encodeURIComponent(url)); // Correctly encodes the URL field value
+                return false; // Prevents default form submission
             }
+
 
 
             function updateResult(text) {
