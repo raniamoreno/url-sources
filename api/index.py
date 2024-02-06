@@ -46,7 +46,7 @@ class handler(BaseHTTPRequestHandler):
             input[type="text"] {
                 width: 100%;
                 padding: 10px;
-                margin-bottom: 10px; /* Adjusted for consistency */
+                margin-bottom: 0px; /* Adjusted for consistency */
             }
             #result {
                 text-align: left;
@@ -60,7 +60,7 @@ class handler(BaseHTTPRequestHandler):
             .button { /* Shared button styles */
                 display: block;
                 width: fit-content; /* Adjust width to fit content */
-                margin: 20px auto;
+                margin: 10px auto;
                 padding: 10px 20px;
                 cursor: pointer;
                 background-color: #007bff; /* Bootstrap primary color for reference */
