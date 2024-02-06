@@ -20,7 +20,7 @@ USER_AGENTS = [
 class handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
-    # Display the form with AJAX for asynchronous submission, input clearing, centered styling, and text wrapping
+    # Display the form with AJAX for asynchronous submission, input clearing, centered styling, text wrapping, and consistent button styling
         html_form = """
     <!DOCTYPE html>
     <html lang="en">
@@ -35,40 +35,56 @@ class handler(BaseHTTPRequestHandler):
                 justify-content: center;
                 align-items: center;
                 flex-direction: column;
-                font-family: Arial, sans-serif; /* Improves readability */
+                font-family: Arial, sans-serif;
             }
             form, #result {
                 text-align: center;
                 margin: 10px;
-                width: 80%; /* Adjusts form width, ensuring it's not too wide */
-                max-width: 600px; /* Ensures elements don't become too wide on larger screens */
+                width: 80%;
+                max-width: 600px;
             }
             input[type="text"] {
-                width: 100%; /* Makes input field take full width of its parent */
+                width: 100%;
                 padding: 10px;
-                margin: 10px 0; /* Spacing around the input field */
+                margin-bottom: 10px; /* Adjusted for consistency */
             }
             #result {
-                text-align: left; /* Aligns result text to the left for readability */
-                word-wrap: break-word; /* Ensures long words can break and wrap to the next line */
+                text-align: left;
+                word-wrap: break-word;
             }
             pre {
-                white-space: pre-wrap; /* Allows pre-formatted text to wrap */
-                word-break: break-word; /* Ensures words break and wrap correctly */
-                max-width: 100%; /* Prevents the pre element from overflowing its container */
+                white-space: pre-wrap;
+                word-break: break-word;
+                max-width: 100%;
             }
-            #copyButton {
-                display: block; /* Makes the button a block element */
-                margin: 20px auto; /* Centers the button horizontally and adds vertical spacing */
-                padding: 10px 20px; /* Adds some padding for better aesthetics */
-                cursor: pointer; /* Changes cursor to pointer to indicate button */
+            .button { /* Shared button styles */
+                display: block;
+                width: fit-content; /* Adjust width to fit content */
+                margin: 20px auto;
+                padding: 10px 20px;
+                cursor: pointer;
+                background-color: #007bff; /* Bootstrap primary color for reference */
+                color: white;
+                border: none;
+                border-radius: 5px;
+                text-align: center;
+            }
+            input[type="submit"] { /* Apply shared styles to the submit button */
+                display: inline-block; /* Override default block display */
+                width: auto; /* Adjust width to auto for inline display */
+                margin: 20px auto;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
             }
         </style>
         <script>
             function fetchContent() {
                 var xhr = new XMLHttpRequest();
                 var urlField = document.getElementById('url');
-                var url = urlField.value;
                 xhr.open("POST", "/", true);
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                 xhr.onreadystatechange = function() {
@@ -83,25 +99,26 @@ class handler(BaseHTTPRequestHandler):
 
             function updateResult(text) {
                 var resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = ''; // Clear previous content
+                resultDiv.innerHTML = '';
                 var pre = document.createElement('pre');
-                pre.textContent = text; // Insert text content, preserving formatting
-                resultDiv.appendChild(pre); // Add the pre element to the result div
+                pre.textContent = text;
+                resultDiv.appendChild(pre);
 
                 var copyBtn = document.getElementById('copyButton') || document.createElement('button');
                 copyBtn.textContent = 'Copy Result';
                 copyBtn.id = 'copyButton';
+                copyBtn.className = 'button'; // Apply shared styles
                 copyBtn.onclick = function() {
-                    navigator.clipboard.writeText(pre.textContent); // Copy text content to clipboard
+                    navigator.clipboard.writeText(pre.textContent);
                 };
-                resultDiv.appendChild(copyBtn); // Add the copy button to the result div
+                resultDiv.appendChild(copyBtn);
             }
         </script>
     </head>
     <body>
         <form onsubmit="return fetchContent();">
             URL: <input type="text" id="url" name="url">
-            <input type="submit" value="Fetch and Parse">
+            <input type="submit" value="Fetch and Parse" class="button"> <!-- Apply shared styles -->
         </form>
         <div id="result">
             <!-- The result and "Copy Result" button will be dynamically inserted here -->
