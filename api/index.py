@@ -20,7 +20,7 @@ USER_AGENTS = [
 class handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
-    # Display the form with AJAX for asynchronous submission, input clearing, and centered styling
+    # Display the form with AJAX for asynchronous submission, input clearing, centered styling, and text wrapping
         html_form = """
     <!DOCTYPE html>
     <html lang="en">
@@ -35,18 +35,31 @@ class handler(BaseHTTPRequestHandler):
                 justify-content: center;
                 align-items: center;
                 flex-direction: column;
+                font-family: Arial, sans-serif; /* Improves readability */
             }
             form, #result {
                 text-align: center;
                 margin: 10px;
+                width: 80%; /* Adjusts form width, ensuring it's not too wide */
+                max-width: 600px; /* Ensures elements don't become too wide on larger screens */
             }
             input[type="text"] {
-                width: 50%; /* Adjust the width as needed */
+                width: 100%; /* Makes input field take full width of its parent */
                 padding: 10px;
                 margin: 10px 0; /* Spacing around the input field */
             }
+            #result {
+                text-align: left; /* Aligns result text to the left for readability */
+                word-wrap: break-word; /* Ensures long words can break and wrap to the next line */
+            }
+            pre {
+                white-space: pre-wrap; /* Allows pre-formatted text to wrap */
+                word-break: break-word; /* Ensures words break and wrap correctly */
+                max-width: 100%; /* Prevents the pre element from overflowing its container */
+            }
             #copyButton {
                 margin-top: 10px; /* Spacing above the button */
+                cursor: pointer; /* Changes cursor to pointer to indicate button */
             }
         </style>
         <script>
@@ -59,7 +72,7 @@ class handler(BaseHTTPRequestHandler):
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         updateResult(this.responseText);
-                        urlField.value = '';
+                        urlField.value = ''; // Clear the input field after displaying the result
                     }
                 };
                 xhr.send("url=" + encodeURIComponent(url));
@@ -68,17 +81,18 @@ class handler(BaseHTTPRequestHandler):
 
             function updateResult(text) {
                 var resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = '';
+                resultDiv.innerHTML = ''; // Clear previous content
                 var pre = document.createElement('pre');
-                pre.textContent = text;
-                resultDiv.appendChild(pre);
+                pre.textContent = text; // Insert text content, preserving formatting
+                resultDiv.appendChild(pre); // Add the pre element to the result div
+
                 var copyBtn = document.getElementById('copyButton') || document.createElement('button');
                 copyBtn.textContent = 'Copy Result';
                 copyBtn.id = 'copyButton';
                 copyBtn.onclick = function() {
-                    navigator.clipboard.writeText(pre.textContent);
+                    navigator.clipboard.writeText(pre.textContent); // Copy text content to clipboard
                 };
-                resultDiv.appendChild(copyBtn);
+                resultDiv.appendChild(copyBtn); // Add the copy button to the result div
             }
         </script>
     </head>
@@ -87,7 +101,9 @@ class handler(BaseHTTPRequestHandler):
             URL: <input type="text" id="url" name="url">
             <input type="submit" value="Fetch and Parse">
         </form>
-        <div id="result"></div>
+        <div id="result">
+            <!-- The result and "Copy Result" button will be dynamically inserted here -->
+        </div>
     </body>
     </html>
         """
@@ -95,6 +111,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(html_form.encode())
+
 
 
 
