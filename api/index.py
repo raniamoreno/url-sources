@@ -20,68 +20,76 @@ USER_AGENTS = [
 class handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
-        # Display the form with AJAX for asynchronous submission and input clearing
+    # Display the form with AJAX for asynchronous submission, input clearing, and centered styling
         html_form = """
-       <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Web Parser</title>
-    <script>
-        // Function to handle form submission
-        function fetchContent() {
-            var xhr = new XMLHttpRequest();
-            var urlField = document.getElementById('url'); // Get the input field
-            var url = urlField.value; // Get the URL from the input field
-            xhr.open("POST", "/", true); // Assuming your server expects POST requests
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    updateResult(this.responseText); // Update the result area
-                    urlField.value = ''; // Clear the input field
-                }
-            };
-            xhr.send("url=" + encodeURIComponent(url));
-            return false; // Prevent default form submission
-        }
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Web Parser</title>
+        <style>
+            body, html {
+                height: 100%;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+            form, #result {
+                text-align: center;
+                margin: 10px;
+            }
+            input[type="text"] {
+                width: 50%; /* Adjust the width as needed */
+                padding: 10px;
+                margin: 10px 0; /* Spacing around the input field */
+            }
+            #copyButton {
+                margin-top: 10px; /* Spacing above the button */
+            }
+        </style>
+        <script>
+            function fetchContent() {
+                var xhr = new XMLHttpRequest();
+                var urlField = document.getElementById('url');
+                var url = urlField.value;
+                xhr.open("POST", "/", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        updateResult(this.responseText);
+                        urlField.value = '';
+                    }
+                };
+                xhr.send("url=" + encodeURIComponent(url));
+                return false; // Prevent default form submission
+            }
 
-        // Function to update the result area
-        function updateResult(text) {
-            var resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = ''; // Clear previous content
-
-            var pre = document.createElement('pre');
-            pre.textContent = text; // Set text content to preserve formatting
-
-            resultDiv.appendChild(pre); // Append the <pre> element to the result div
-
-            // Create or update the Copy Result button
-            var copyBtn = document.getElementById('copyButton') || document.createElement('button');
-            copyBtn.textContent = 'Copy Result';
-            copyBtn.id = 'copyButton';
-            copyBtn.onclick = function() {
-                navigator.clipboard.writeText(pre.textContent).then(function() {
-                    console.log('Result copied to clipboard!');
-                }, function(err) {
-                    console.error('Could not copy text:', err);
-                });
-            };
-            resultDiv.appendChild(copyBtn); // Append or re-append the button to resultDiv
-        }
-    </script>
-</head>
-<body>
-    <form onsubmit="return fetchContent();">
-        URL: <input type="text" id="url" name="url">
-        <input type="submit" value="Fetch and Parse">
-    </form>
-    <div id="result">
-        <!-- Result and Copy Result button will be dynamically inserted here -->
-    </div>
-</body>
-</html>
-
-
+            function updateResult(text) {
+                var resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '';
+                var pre = document.createElement('pre');
+                pre.textContent = text;
+                resultDiv.appendChild(pre);
+                var copyBtn = document.getElementById('copyButton') || document.createElement('button');
+                copyBtn.textContent = 'Copy Result';
+                copyBtn.id = 'copyButton';
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(pre.textContent);
+                };
+                resultDiv.appendChild(copyBtn);
+            }
+        </script>
+    </head>
+    <body>
+        <form onsubmit="return fetchContent();">
+            URL: <input type="text" id="url" name="url">
+            <input type="submit" value="Fetch and Parse">
+        </form>
+        <div id="result"></div>
+    </body>
+    </html>
         """
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
