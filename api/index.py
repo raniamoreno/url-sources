@@ -58,7 +58,9 @@ class handler(BaseHTTPRequestHandler):
                 max-width: 100%; /* Prevents the pre element from overflowing its container */
             }
             #copyButton {
-                margin-top: 10px; /* Spacing above the button */
+                display: block; /* Makes the button a block element */
+                margin: 20px auto; /* Centers the button horizontally and adds vertical spacing */
+                padding: 10px 20px; /* Adds some padding for better aesthetics */
                 cursor: pointer; /* Changes cursor to pointer to indicate button */
             }
         </style>
