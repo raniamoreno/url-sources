@@ -1,13 +1,13 @@
+import os
 import requests
 from bs4 import BeautifulSoup
+from openai import OpenAI
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
 import random
-from datetime import datetime
-import re
-from dateutil import parser
 
 # Instantiate the OpenAI client with your API key
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Define a list of user-agents to rotate through
 USER_AGENTS = [
@@ -149,37 +149,6 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response_message.encode())
 
-def extract_date(soup):
-    # Enhanced meta tags search
-    date_meta_tags = [
-        'article:published_time', 'datePublished', 'pubDate', 'og:published_time',
-        'og:pubdate', 'sailthru.date', 'rnews:datePublished', 'dc.date.issued'
-    ]
-    for tag in date_meta_tags:
-        meta_date = soup.find('meta', property=tag) or soup.find('meta', attrs={"name": tag})
-        if meta_date and meta_date.get('content'):
-            try:
-                return parser.parse(meta_date['content']).strftime('%d.%m.%Y')
-            except Exception as e:
-                print(f"Failed to parse date from meta '{tag}': {e}")  # Logging the exception
-
-    # Broad regex search in article text
-    date_patterns = [
-        r'\b\d{1,2}[\./-]\d{1,2}[\./-]\d{2,4}\b',  # Matches DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY
-        r'\b\d{4}[\./-]\d{1,2}[\./-]\d{1,2}\b',    # Matches YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
-    ]
-    text = soup.get_text()
-    for pattern in date_patterns:
-        match = re.search(pattern, text)
-        if match:
-            try:
-                return parser.parse(match.group()).strftime('%d.%m.%Y')
-            except Exception as e:
-                print(f"Failed to parse date from text '{match.group()}': {e}")  # Logging the exception
-
-    return "Date format not recognized"
-
-
 def fetch_and_parse_content(url):
     headers = {'User-Agent': random.choice(USER_AGENTS)}
     session = requests.Session()
@@ -189,31 +158,21 @@ def fetch_and_parse_content(url):
         response = session.get(url)
         response.raise_for_status()
         html_content = response.text
-        soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Extract title
+        soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Extract website name from URL or meta tag
-        website_name = re.findall('(?:http[s]?://)?([^/]+)', url)[0] if url else "Website Name Not Found"
+        # Adjusted prompt
+        prompt = f"Format the URL '{url}', the title '{title}', and extract from provided html the website name and publication date, or just any date that might be publication date (convert into DD.MM.YYYY), put findings into a single line in the exact format: URL Title, Website Name Publication Date."
+
+        completion = client.completions.create(
+            model="gpt-3.5-turbo-instruct",
+            prompt=prompt,
+            temperature=0.5,
+            max_tokens=150
+        )
         
-        # Extract publication date using enhanced extraction logic
-        date_str = extract_date(soup)
-        if date_str:
-            try:
-                # Try parsing with known format
-                pub_date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S%z').strftime('%d.%m.%Y')
-            except ValueError:
-                # Fallback for different date format
-                try:
-                    pub_date = datetime.strptime(date_str, '%d/%m/%Y').strftime('%d.%m.%Y')
-                except ValueError:
-                    pub_date = "Date format not recognized"
-        else:
-            pub_date = "Publication Date Not Found"
-        
-        # Format the output correctly
-        parsed_response = f"{url} {title}, {website_name} {pub_date}"
+        parsed_response = completion.choices[0].text.strip()
         
         return parsed_response
 
@@ -221,7 +180,6 @@ def fetch_and_parse_content(url):
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
-
 
 
 
