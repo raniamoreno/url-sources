@@ -108,15 +108,19 @@ class Handler(BaseHTTPRequestHandler):
                 createCopyButton(text);
             }
 
-            function createCopyButton(text) {
+            function createCopyButton() {
                 var copyBtn = document.createElement('button');
                 copyBtn.textContent = 'Copy Result';
                 copyBtn.onclick = function() {
-                    navigator.clipboard.writeText(text);
+                    var resultDiv = document.getElementById('result');
+                    // Extract text from the <pre> element, split by <br>, and join with \n for natural line breaks
+                    var textToCopy = resultDiv.innerText;
+                    navigator.clipboard.writeText(textToCopy);
                 };
                 var resultDiv = document.getElementById('result');
                 resultDiv.appendChild(copyBtn);
             }
+
         </script>
     </body>
     </html>
