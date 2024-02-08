@@ -139,7 +139,9 @@ class Handler(BaseHTTPRequestHandler):
             urls = [url.strip() for url in urls_text.split('\n') if url.strip()]
             for url in urls:
                 parsed_content = fetch_and_parse_content(url)
-                response_messages.append(f"{url}: {parsed_content}")
+                # Ensure parsed_content does not redundantly start with the URL if it's not needed.
+                # If it does, consider stripping it or adjusting the format accordingly.
+                response_messages.append(f"{parsed_content}")
             response_message = "<br>".join(response_messages)
         else:
             response_message = "URLs not provided."
@@ -148,6 +150,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(response_message.encode())
+
 
 def fetch_and_parse_content(url):
     headers = {'User-Agent': random.choice(USER_AGENTS)}
