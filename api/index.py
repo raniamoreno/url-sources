@@ -1,4 +1,3 @@
-import os
 import requests
 from bs4 import BeautifulSoup
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -149,6 +148,27 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response_message.encode())
 
+def extract_date(soup):
+    # Define patterns to search for within meta tags
+    date_patterns = ['article:published_time', 'datePublished', 'pubDate', 'og:published_time']
+    for pattern in date_patterns:
+        meta_date = soup.find('meta', property=pattern) or soup.find('meta', attrs={"name": pattern})
+        if meta_date and meta_date.get('content'):
+            return meta_date['content']
+
+    # Fallback to regex search within the page text
+    # This pattern matches common date formats, adjust as needed
+    date_regex_patterns = [
+        r'\b\d{4}-\d{1,2}-\d{1,2}\b',  # Matches YYYY-MM-DD
+        r'\b\d{1,2}/\d{1,2}/\d{4}\b'   # Matches DD/MM/YYYY or MM/DD/YYYY
+    ]
+    for pattern in date_regex_patterns:
+        match = re.search(pattern, soup.get_text())
+        if match:
+            return match.group()
+
+    return None
+
 def fetch_and_parse_content(url):
     headers = {'User-Agent': random.choice(USER_AGENTS)}
     session = requests.Session()
@@ -158,7 +178,6 @@ def fetch_and_parse_content(url):
         response = session.get(url)
         response.raise_for_status()
         html_content = response.text
-        
         soup = BeautifulSoup(html_content, 'html.parser')
         
         # Extract title
@@ -167,14 +186,22 @@ def fetch_and_parse_content(url):
         # Extract website name from URL or meta tag
         website_name = re.findall('(?:http[s]?://)?([^/]+)', url)[0] if url else "Website Name Not Found"
         
-        # Extract publication date
-        meta_date = soup.find('meta', property='article:published_time')
-        if meta_date and meta_date.get('content'):
-            pub_date = datetime.strptime(meta_date['content'], '%Y-%m-%dT%H:%M:%S%z').strftime('%d.%m.%Y')
+        # Extract publication date using enhanced extraction logic
+        date_str = extract_date(soup)
+        if date_str:
+            try:
+                # Try parsing with known format
+                pub_date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S%z').strftime('%d.%m.%Y')
+            except ValueError:
+                # Fallback for different date format
+                try:
+                    pub_date = datetime.strptime(date_str, '%d/%m/%Y').strftime('%d.%m.%Y')
+                except ValueError:
+                    pub_date = "Date format not recognized"
         else:
             pub_date = "Publication Date Not Found"
         
-        # Format the output
+        # Format the output correctly
         parsed_response = f"{url} {title}, {website_name} {pub_date}"
         
         return parsed_response
@@ -183,6 +210,7 @@ def fetch_and_parse_content(url):
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
+
 
 
 
