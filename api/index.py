@@ -8,7 +8,6 @@ from datetime import datetime
 import re
 
 # Instantiate the OpenAI client with your API key
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Define a list of user-agents to rotate through
 USER_AGENTS = [
