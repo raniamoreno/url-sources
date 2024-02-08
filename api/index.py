@@ -86,42 +86,45 @@ class Handler(BaseHTTPRequestHandler):
         <div id="result">
             <!-- The result will be dynamically inserted here -->
         </div>
+        
         <script>
-    function fetchContent() {
-        var xhr = new XMLHttpRequest();
-        var urlField = document.getElementById('url');
-        var urls = urlField.value;
-        xhr.open("POST", "/", true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                updateResult(this.responseText);
-            }
-        };
-        xhr.send("url=" + encodeURIComponent(urls));
-        return false;
-    }
-
-    function updateResult(text) {
-        var resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = '<pre>' + text + '</pre>';
-        createCopyButton(); // Adjusted to not pass text
-    }
-
-    function createCopyButton() {
-        var resultDiv = document.getElementById('result');
-        if (!document.getElementById('copyBtn')) { // Check if button already exists
-            var copyBtn = document.createElement('button');
-            copyBtn.id = 'copyBtn';
-            copyBtn.textContent = 'Copy Result';
-            copyBtn.onclick = function() {
-                var textToCopy = resultDiv.innerText; // Extracts current text content
-                navigator.clipboard.writeText(textToCopy);
-            };
-            resultDiv.appendChild(copyBtn);
+function fetchContent() {
+    var xhr = new XMLHttpRequest();
+    var urlField = document.getElementById('url');
+    var urls = urlField.value;
+    xhr.open("POST", "/", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            updateResult(this.responseText);
+            createCopyButton(); // Ensure this is called only after updating the result
         }
+    };
+    xhr.send("url=" + encodeURIComponent(urls));
+    return false; // Prevents the default form submission
+}
+
+function updateResult(text) {
+    var resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = '<pre>' + text + '</pre>';
+    // No need to call createCopyButton here if it's called in fetchContent
+}
+
+function createCopyButton() {
+    var resultDiv = document.getElementById('result');
+    if (!document.getElementById('copyBtn')) { // Prevent multiple buttons
+        var copyBtn = document.createElement('button');
+        copyBtn.id = 'copyBtn';
+        copyBtn.textContent = 'Copy Result';
+        copyBtn.onclick = function() {
+            var textToCopy = resultDiv.innerText;
+            navigator.clipboard.writeText(textToCopy);
+        };
+        resultDiv.after(copyBtn); // Place the button outside the result div to avoid innerText copying the button text
     }
+}
 </script>
+
 
     </body>
     </html>
