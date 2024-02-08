@@ -1,10 +1,11 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from openai import OpenAI
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
 import random
+from datetime import datetime
+import re
 
 # Instantiate the OpenAI client with your API key
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -160,19 +161,22 @@ def fetch_and_parse_content(url):
         html_content = response.text
         
         soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Extract title
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Adjusted prompt
-        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date (convert into DD.MM.YYYY) into a single line in the exact format: URL Title, Website Name Publication Date."
-
-        completion = client.completions.create(
-            model="gpt-3.5-turbo-instruct",
-            prompt=prompt,
-            temperature=0.5,
-            max_tokens=150
-        )
+        # Extract website name from URL or meta tag
+        website_name = re.findall('(?:http[s]?://)?([^/]+)', url)[0] if url else "Website Name Not Found"
         
-        parsed_response = completion.choices[0].text.strip()
+        # Extract publication date
+        meta_date = soup.find('meta', property='article:published_time')
+        if meta_date and meta_date.get('content'):
+            pub_date = datetime.strptime(meta_date['content'], '%Y-%m-%dT%H:%M:%S%z').strftime('%d.%m.%Y')
+        else:
+            pub_date = "Publication Date Not Found"
+        
+        # Format the output
+        parsed_response = f"{url} {title}, {website_name} {pub_date}"
         
         return parsed_response
 
