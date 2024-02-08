@@ -5,6 +5,7 @@ from urllib.parse import parse_qs
 import random
 from datetime import datetime
 import re
+from dateutil import parser
 
 # Instantiate the OpenAI client with your API key
 
@@ -149,23 +150,22 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(response_message.encode())
 
 def extract_date(soup):
-    # Define patterns to search for within meta tags
+    # First, try to find a <time> element
+    time_element = soup.find('time')
+    if time_element and time_element.get('datetime'):
+        return time_element['datetime']
+
+    # Then, look for common meta tags with dateutil for flexible parsing
     date_patterns = ['article:published_time', 'datePublished', 'pubDate', 'og:published_time']
     for pattern in date_patterns:
         meta_date = soup.find('meta', property=pattern) or soup.find('meta', attrs={"name": pattern})
         if meta_date and meta_date.get('content'):
-            return meta_date['content']
+            try:
+                return parser.parse(meta_date['content']).isoformat()
+            except:
+                pass  # If dateutil can't parse the date, continue to the next possibility
 
-    # Fallback to regex search within the page text
-    # This pattern matches common date formats, adjust as needed
-    date_regex_patterns = [
-        r'\b\d{4}-\d{1,2}-\d{1,2}\b',  # Matches YYYY-MM-DD
-        r'\b\d{1,2}/\d{1,2}/\d{4}\b'   # Matches DD/MM/YYYY or MM/DD/YYYY
-    ]
-    for pattern in date_regex_patterns:
-        match = re.search(pattern, soup.get_text())
-        if match:
-            return match.group()
+    # Additional custom logic here based on manual inspection
 
     return None
 
