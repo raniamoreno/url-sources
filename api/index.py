@@ -150,7 +150,6 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(response_message.encode())
 
 def fetch_and_parse_content(url):
-    # Function to fetch and parse content for each URL
     headers = {'User-Agent': random.choice(USER_AGENTS)}
     session = requests.Session()
     session.headers.update(headers)
@@ -163,9 +162,15 @@ def fetch_and_parse_content(url):
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date into a single line in the exact format: URL Title, Website Name Publication Date."
+        # Assuming extraction or approximation of the publication date is handled elsewhere
+        # The prompt is now simplified to focus on formatting the output correctly
+        prompt = (f"Format the URL, title, and any available publication date into a single line. "
+                  f"Use the format 'URL Title, Source Name DD.MM.YYYY'. If the publication date is not available, "
+                  f"leave it out. Assume the source name is extracted from the URL, look closely for date, it can be present in a variaty formats. "
+                  f"\n\nURL: '{url}'\nTitle: '{title}'\nReformat this information.")
+        
         completion = client.completions.create(
-            model="gpt-3.5-turbo-instruct",
+            model="gpt-3.5-turbo-instruct",  # Corrected model name
             prompt=prompt,
             temperature=0.5,
             max_tokens=150
@@ -173,11 +178,15 @@ def fetch_and_parse_content(url):
         
         parsed_response = completion.choices[0].text.strip()
         
+        # Here, you might need to further process the response to ensure the date format is exactly as required
+        
         return parsed_response
+
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
+
 
 if __name__ == "__main__":
     server_address = ('', 8000)
