@@ -167,7 +167,7 @@ def fetch_and_parse_content(url):
         prompt = (f"Format the URL, title, and any available publication date into a single line. "
                   f"Use the format 'URL Title, Source Name DD.MM.YYYY'. If the publication date is not available, "
                   f"leave it out. Assume the source name is extracted from the URL, look closely for date, it can be present in a variaty formats. "
-                  f"\n\nURL: '{url}'\nTitle: '{title}'\nReformat this information.")
+                  )
         
         completion = client.completions.create(
             model="gpt-3.5-turbo-instruct",  # Corrected model name
