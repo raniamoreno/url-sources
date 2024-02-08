@@ -26,58 +26,7 @@ class Handler(BaseHTTPRequestHandler):
         <meta charset="UTF-8">
         <title>Web Parser</title>
         <style>
-            body, html {
-                height: 100%;
-                margin: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                font-family: Arial, sans-serif;
-            }
-            form, #result {
-                text-align: center;
-                margin: 10px;
-                width: 80%;
-                max-width: 600px;
-            }
-            textarea {
-                width: 100%;
-                padding: 10px;
-                margin-bottom: 20px;
-            }
-            #result {
-                text-align: left;
-                word-wrap: break-word;
-            }
-            pre {
-                white-space: pre-wrap;
-                word-break: break-word;
-                max-width: 100%;
-            }
-            .button {
-                display: block;
-                width: fit-content;
-                margin: 10px auto;
-                padding: 10px 20px;
-                cursor: pointer;
-                background-color: #007bff;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                text-align: center;
-            }
-            input[type="submit"] {
-                display: inline-block;
-                width: auto;
-                margin: 20px auto;
-                padding: 10px 20px;
-                background-color: #007bff;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-            }
+            /* CSS Styles */
         </style>
         <script>
             function fetchContent() {
@@ -89,7 +38,6 @@ class Handler(BaseHTTPRequestHandler):
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         updateResult(this.responseText);
-                        urlField.value = ''; // Clears the textarea after displaying the result
                     }
                 };
                 xhr.send("url=" + encodeURIComponent(urls)); // Sends the entire textarea content
@@ -99,26 +47,33 @@ class Handler(BaseHTTPRequestHandler):
             function updateResult(text) {
                 var resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = '<pre>' + text + '</pre>';
+                createCopyButton(text);
+            }
+
+            function createCopyButton(text) {
+                var copyBtn = document.createElement('button');
+                copyBtn.textContent = 'Copy Result';
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(text);
+                };
+                var resultDiv = document.getElementById('result');
+                resultDiv.appendChild(copyBtn);
             }
         </script>
     </head>
     <body>
-        <form onsubmit="return fetchContent();">
-            URLs (one per line): <textarea id="url" name="url" rows="5"></textarea>
-            <input type="submit" value="Fetch and Parse" class="button">
-        </form>
-        <div id="result">
-            <!-- The result will be dynamically inserted here -->
-        </div>
+        <!-- HTML Form -->
     </body>
     </html>
         """
+        # Send the HTML form
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(html_form.encode())
 
     def do_POST(self):
+        # Handle POST request
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         parsed_data = parse_qs(post_data)
@@ -126,20 +81,21 @@ class Handler(BaseHTTPRequestHandler):
 
         response_messages = []
         if urls_text:
-            urls = [url.strip() for url in urls_text.split('\n') if url.strip()]  # Split URLs by new line and filter out empty ones
+            urls = [url.strip() for url in urls_text.split('\n') if url.strip()]
             for url in urls:
                 parsed_content = fetch_and_parse_content(url)
                 response_messages.append(f"{url}: {parsed_content}")
             response_message = "<br>".join(response_messages)
         else:
             response_message = "URLs not provided."
-
+        
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(response_message.encode())
 
 def fetch_and_parse_content(url):
+    # Function to fetch and parse content for each URL
     headers = {'User-Agent': random.choice(USER_AGENTS)}
     session = requests.Session()
     session.headers.update(headers)
@@ -152,8 +108,17 @@ def fetch_and_parse_content(url):
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Assume this function is replaced with your actual content processing logic
-        return f"Title: {title}"
+        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date into a single line in the exact format: URL Title, Website Name Publication Date."
+        completion = client.completions.create(
+            model="gpt-3.5-turbo-instruct",
+            prompt=prompt,
+            temperature=0.5,
+            max_tokens=150
+        )
+        
+        parsed_response = completion.choices[0].text.strip()
+        
+        return parsed_response
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
     except Exception as e:
