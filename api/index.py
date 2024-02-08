@@ -26,8 +26,66 @@ class Handler(BaseHTTPRequestHandler):
         <meta charset="UTF-8">
         <title>Web Parser</title>
         <style>
-            /* CSS Styles */
+            body, html {
+                height: 100%;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                font-family: Arial, sans-serif;
+            }
+            form, #result {
+                text-align: center;
+                margin: 10px;
+                width: 80%;
+                max-width: 600px;
+            }
+            textarea {
+                width: 100%;
+                padding: 10px;
+                margin-bottom: 20px;
+            }
+            #result {
+                text-align: left;
+                word-wrap: break-word;
+                margin-top: 20px;
+            }
+            pre {
+                white-space: pre-wrap;
+                word-break: break-word;
+                max-width: 100%;
+            }
+            button {
+                display: inline-block;
+                margin-top: 10px;
+                padding: 10px 20px;
+                cursor: pointer;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                text-align: center;
+            }
+            input[type="submit"] {
+                width: auto;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
         </style>
+    </head>
+    <body>
+        <form onsubmit="return fetchContent();">
+            URLs (one per line): <textarea id="url" name="url" rows="5"></textarea>
+            <input type="submit" value="Fetch and Parse">
+        </form>
+        <div id="result">
+            <!-- The result will be dynamically inserted here -->
+        </div>
         <script>
             function fetchContent() {
                 var xhr = new XMLHttpRequest();
@@ -40,8 +98,8 @@ class Handler(BaseHTTPRequestHandler):
                         updateResult(this.responseText);
                     }
                 };
-                xhr.send("url=" + encodeURIComponent(urls)); // Sends the entire textarea content
-                return false; // Prevents default form submission
+                xhr.send("url=" + encodeURIComponent(urls));
+                return false;
             }
 
             function updateResult(text) {
@@ -60,17 +118,14 @@ class Handler(BaseHTTPRequestHandler):
                 resultDiv.appendChild(copyBtn);
             }
         </script>
-    </head>
-    <body>
-        <!-- HTML Form -->
     </body>
     </html>
         """
-        # Send the HTML form
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(html_form.encode())
+
 
     def do_POST(self):
         # Handle POST request
