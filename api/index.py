@@ -150,40 +150,34 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(response_message.encode())
 
 def extract_date(soup):
-    # First, try to find a <time> element with a datetime attribute
-    time_element = soup.find('time')
-    if time_element and time_element.get('datetime'):
-        try:
-            return parser.parse(time_element['datetime']).strftime('%d.%m.%Y')
-        except ValueError:
-            pass
-    
-    # Next, check various meta tags
-    date_meta_tags = ['article:published_time', 'datePublished', 'pubDate', 'og:published_time']
+    # Enhanced meta tags search
+    date_meta_tags = [
+        'article:published_time', 'datePublished', 'pubDate', 'og:published_time',
+        'og:pubdate', 'sailthru.date', 'rnews:datePublished', 'dc.date.issued'
+    ]
     for tag in date_meta_tags:
         meta_date = soup.find('meta', property=tag) or soup.find('meta', attrs={"name": tag})
         if meta_date and meta_date.get('content'):
             try:
                 return parser.parse(meta_date['content']).strftime('%d.%m.%Y')
-            except ValueError:
-                pass
+            except Exception as e:
+                print(f"Failed to parse date from meta '{tag}': {e}")  # Logging the exception
 
-    # As a last resort, search the article text for dates
-    # Adjust regex patterns based on the observed formats
+    # Broad regex search in article text
     date_patterns = [
-        r'\b\d{1,2}\.\d{1,2}\.\d{4}\b',  # DD.MM.YYYY
-        r'\b\d{1,2}/\d{1,2}/\d{4}\b',    # DD/MM/YYYY
-        # Add more patterns as needed
+        r'\b\d{1,2}[\./-]\d{1,2}[\./-]\d{2,4}\b',  # Matches DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY
+        r'\b\d{4}[\./-]\d{1,2}[\./-]\d{1,2}\b',    # Matches YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
     ]
+    text = soup.get_text()
     for pattern in date_patterns:
-        match = re.search(pattern, soup.get_text())
+        match = re.search(pattern, text)
         if match:
             try:
                 return parser.parse(match.group()).strftime('%d.%m.%Y')
-            except ValueError:
-                pass
+            except Exception as e:
+                print(f"Failed to parse date from text '{match.group()}': {e}")  # Logging the exception
 
-    return "Publication Date Not Found"
+    return "Date format not recognized"
 
 
 def fetch_and_parse_content(url):
