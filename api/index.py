@@ -162,15 +162,8 @@ def fetch_and_parse_content(url):
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Assume 'extracted_date' is a variable where you've either extracted the date or decided on a placeholder
-        extracted_date = "DD.MM.YYYY"  # Placeholder for where you'd insert logic to determine the date
-        
         # Adjusted prompt
-        prompt = (f"Given a URL and a title from a webpage, create a concise summary "
-                  f"in the following format: URL Title, Source Name {extracted_date}. "
-                  f"Assume the source name is part of the URL. If the publication date is not available, use '{extracted_date}' as a placeholder. "
-                  f"Ensure the date is in DD.MM.YYYY format.\n\n"
-                  f"URL: {url}\nTitle: {title}\n")
+        prompt = f"Format the URL '{url}', the title '{title}', and extract the website name and publication date (convert into DD.MM.YYYY) into a single line in the exact format: URL Title, Website Name Publication Date."
 
         completion = client.completions.create(
             model="gpt-3.5-turbo-instruct",
