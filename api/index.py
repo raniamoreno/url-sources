@@ -150,24 +150,41 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(response_message.encode())
 
 def extract_date(soup):
-    # First, try to find a <time> element
+    # First, try to find a <time> element with a datetime attribute
     time_element = soup.find('time')
     if time_element and time_element.get('datetime'):
-        return time_element['datetime']
-
-    # Then, look for common meta tags with dateutil for flexible parsing
-    date_patterns = ['article:published_time', 'datePublished', 'pubDate', 'og:published_time']
-    for pattern in date_patterns:
-        meta_date = soup.find('meta', property=pattern) or soup.find('meta', attrs={"name": pattern})
+        try:
+            return parser.parse(time_element['datetime']).strftime('%d.%m.%Y')
+        except ValueError:
+            pass
+    
+    # Next, check various meta tags
+    date_meta_tags = ['article:published_time', 'datePublished', 'pubDate', 'og:published_time']
+    for tag in date_meta_tags:
+        meta_date = soup.find('meta', property=tag) or soup.find('meta', attrs={"name": tag})
         if meta_date and meta_date.get('content'):
             try:
-                return parser.parse(meta_date['content']).isoformat()
-            except:
-                pass  # If dateutil can't parse the date, continue to the next possibility
+                return parser.parse(meta_date['content']).strftime('%d.%m.%Y')
+            except ValueError:
+                pass
 
-    # Additional custom logic here based on manual inspection
+    # As a last resort, search the article text for dates
+    # Adjust regex patterns based on the observed formats
+    date_patterns = [
+        r'\b\d{1,2}\.\d{1,2}\.\d{4}\b',  # DD.MM.YYYY
+        r'\b\d{1,2}/\d{1,2}/\d{4}\b',    # DD/MM/YYYY
+        # Add more patterns as needed
+    ]
+    for pattern in date_patterns:
+        match = re.search(pattern, soup.get_text())
+        if match:
+            try:
+                return parser.parse(match.group()).strftime('%d.%m.%Y')
+            except ValueError:
+                pass
 
-    return None
+    return "Publication Date Not Found"
+
 
 def fetch_and_parse_content(url):
     headers = {'User-Agent': random.choice(USER_AGENTS)}
