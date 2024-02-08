@@ -87,41 +87,42 @@ class Handler(BaseHTTPRequestHandler):
             <!-- The result will be dynamically inserted here -->
         </div>
         <script>
-            function fetchContent() {
-                var xhr = new XMLHttpRequest();
-                var urlField = document.getElementById('url');
-                var urls = urlField.value;
-                xhr.open("POST", "/", true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        updateResult(this.responseText);
-                    }
-                };
-                xhr.send("url=" + encodeURIComponent(urls));
-                return false;
+    function fetchContent() {
+        var xhr = new XMLHttpRequest();
+        var urlField = document.getElementById('url');
+        var urls = urlField.value;
+        xhr.open("POST", "/", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                updateResult(this.responseText);
             }
+        };
+        xhr.send("url=" + encodeURIComponent(urls));
+        return false;
+    }
 
-            function updateResult(text) {
-                var resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = '<pre>' + text + '</pre>';
-                createCopyButton(text);
-            }
+    function updateResult(text) {
+        var resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<pre>' + text + '</pre>';
+        createCopyButton(); // Adjusted to not pass text
+    }
 
-            function createCopyButton() {
-                var copyBtn = document.createElement('button');
-                copyBtn.textContent = 'Copy Result';
-                copyBtn.onclick = function() {
-                    var resultDiv = document.getElementById('result');
-                    // Extract text from the <pre> element, split by <br>, and join with \n for natural line breaks
-                    var textToCopy = resultDiv.innerText;
-                    navigator.clipboard.writeText(textToCopy);
-                };
-                var resultDiv = document.getElementById('result');
-                resultDiv.appendChild(copyBtn);
-            }
+    function createCopyButton() {
+        var resultDiv = document.getElementById('result');
+        if (!document.getElementById('copyBtn')) { // Check if button already exists
+            var copyBtn = document.createElement('button');
+            copyBtn.id = 'copyBtn';
+            copyBtn.textContent = 'Copy Result';
+            copyBtn.onclick = function() {
+                var textToCopy = resultDiv.innerText; // Extracts current text content
+                navigator.clipboard.writeText(textToCopy);
+            };
+            resultDiv.appendChild(copyBtn);
+        }
+    }
+</script>
 
-        </script>
     </body>
     </html>
         """
