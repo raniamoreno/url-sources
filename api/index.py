@@ -162,15 +162,18 @@ def fetch_and_parse_content(url):
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Assuming extraction or approximation of the publication date is handled elsewhere
-        # The prompt is now simplified to focus on formatting the output correctly
-        prompt = (f"Format the URL, title, and any available publication date into a single line. "
-                  f"Use the format 'URL Title, Source Name DD.MM.YYYY'. If the publication date is not available, "
-                  f"leave it out. Assume the source name is extracted from the URL, look closely for date, it can be present in a variaty formats. "
-                  )
+        # Assume 'extracted_date' is a variable where you've either extracted the date or decided on a placeholder
+        extracted_date = "DD.MM.YYYY"  # Placeholder for where you'd insert logic to determine the date
         
+        # Adjusted prompt
+        prompt = (f"Given a URL and a title from a webpage, create a concise summary "
+                  f"in the following format: URL Title, Source Name {extracted_date}. "
+                  f"Assume the source name is part of the URL. If the publication date is not available, use '{extracted_date}' as a placeholder. "
+                  f"Ensure the date is in DD.MM.YYYY format.\n\n"
+                  f"URL: {url}\nTitle: {title}\n")
+
         completion = client.completions.create(
-            model="gpt-3.5-turbo-instruct",  # Corrected model name
+            model="gpt-3.5-turbo-instruct",
             prompt=prompt,
             temperature=0.5,
             max_tokens=150
@@ -178,14 +181,13 @@ def fetch_and_parse_content(url):
         
         parsed_response = completion.choices[0].text.strip()
         
-        # Here, you might need to further process the response to ensure the date format is exactly as required
-        
         return parsed_response
 
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
+
 
 
 if __name__ == "__main__":
