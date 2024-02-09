@@ -174,7 +174,7 @@ def fetch_and_parse_content(url):
         title = soup.title.string if soup.title else "Title Not Found"
         
         # Adjusted prompt
-        prompt = f"Format the URL '{url}', the title '{title}', and extract from provided html the website name and publication date, look for <time> or <date time> tags (convert into DD.MM.YYYY), put findings into a single line in the exact format: URL Title, Website Name Publication Date."
+        prompt = f"Format the URL '{url}', the title '{title}', and extract from provided html the website name and publication date, look for <time datetime> or similar tags (convert into DD.MM.YYYY), put findings into a single line in the exact format: URL Title, Website Name Publication Date."
 
         completion = client.completions.create(
             model="gpt-3.5-turbo-instruct",
