@@ -176,7 +176,7 @@ def fetch_and_parse_content(url):
         # Adjusted prompt
         prompt = f"""
         Given the URL '{url}' and its HTML content, identify the title of the webpage, the website's name, and the publication date. 
-        Look for <time> tags with 'datetime' attributes or other HTML elements that indicate the date, and convert any found date into the format DD.MM.YYYY. 
+        Look for <time> tags with 'datetime' attributes or other HTML elements that indicate the date, and convert date into the format DD.MM.YYYY. Do not invent any information, check that is it exists.
         If a website name is not directly available, infer it from the URL. 
         Format the output as: URL, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted from the provided HTML.
         """
