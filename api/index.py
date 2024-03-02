@@ -173,15 +173,14 @@ def fetch_and_parse_content(url):
         soup = BeautifulSoup(html_content, 'html.parser')
         title = soup.title.string if soup.title else "Title Not Found"
         
-        # Adjusted prompt
         prompt = f"""
         Given the URL '{url}' and its HTML content, identify the title of the webpage, the website's name, and the publication date. 
-        Look for <time> tags with 'datetime' attributes or other HTML elements that indicate the date, and convert date into the format DD.MM.YYYY. Do not invent any information, check that is it exists.
+        Look for <time> tags with 'datetime' attributes or other HTML elements that indicate the date, and convert date into the format DD.MM.YYYY. Do not invent any information, check that it exists.
         If a website name is not directly available, infer it from the URL. 
         Format the output as: URL, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted from the provided HTML.
         """
-        completion = client.ChatCompletion.create(
-            model="gpt-4",
+        completion = client.create_completion(
+            model="text-davinci-003",
             prompt=prompt,
             temperature=0.5,
             max_tokens=150
@@ -195,6 +194,7 @@ def fetch_and_parse_content(url):
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
+
 
 
 
