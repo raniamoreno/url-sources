@@ -181,7 +181,7 @@ def fetch_and_parse_content(url):
         Format the output as: URL, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted from the provided HTML.
         """
         completion = client.completions.create(
-            model="gpt-3.5-turbo-instruct",
+            model="gpt-4",
             prompt=prompt,
             temperature=0.5,
             max_tokens=150
