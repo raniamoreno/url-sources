@@ -179,12 +179,22 @@ def fetch_and_parse_content(url):
         If a website name is not directly available, infer it from the URL. 
         Format the output as: URL, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted from the provided HTML.
         """
-        completion = client.create_completion(
-            model="text-davinci-003",
-            prompt=prompt,
-            temperature=0.5,
-            max_tokens=150
+
+        completion = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
         )
+        # completion = client.create_completion(
+        #     model="text-davinci-003",
+        #     prompt=prompt,
+        #     temperature=0.5,
+        #     max_tokens=150
+        # )
         
         parsed_response = completion.choices[0].text.strip()
         
