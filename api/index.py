@@ -196,7 +196,7 @@ def fetch_and_parse_content(url):
         #     max_tokens=150
         # )
         
-        parsed_response = completion.choices[0].text.strip()
+        parsed_response = completion.choices[0].message.content
         
         return parsed_response
 
