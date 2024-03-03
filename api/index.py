@@ -16,8 +16,9 @@ USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
 ]
 
+
 class Handler(BaseHTTPRequestHandler):
-    
+
     def do_GET(self):
         html_form = """
     <!DOCTYPE html>
@@ -134,7 +135,6 @@ function createCopyButton() {
         self.end_headers()
         self.wfile.write(html_form.encode())
 
-
     def do_POST(self):
         # Handle POST request
         content_length = int(self.headers['Content-Length'])
@@ -153,60 +153,67 @@ function createCopyButton() {
             response_message = "<br>".join(response_messages)
         else:
             response_message = "URLs not provided."
-        
+
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(response_message.encode())
 
 
-def fetch_and_parse_content(url):
+def get_html(url):
     headers = {'User-Agent': random.choice(USER_AGENTS)}
     session = requests.Session()
     session.headers.update(headers)
-    
+
     try:
         response = session.get(url)
         response.raise_for_status()
-        html_content = response.text
-        
-        soup = BeautifulSoup(html_content, 'html.parser')
-        title = soup.title.string if soup.title else "Title Not Found"
-        
-        prompt = f"""
-        Given the URL '{url}' and its HTML content, identify the title of the webpage, the website's name, and the publication date. 
-        Look for <time> tags with 'datetime' attributes or other HTML elements that indicate the date, and convert date into the format DD.MM.YYYY. Do not invent any information, check that it exists.
-        If a website name is not directly available, infer it from the URL. 
-        Format the output as: URL, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted from the provided HTML.
-        """
-
-        completion = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-        )
-        # completion = client.create_completion(
-        #     model="text-davinci-003",
-        #     prompt=prompt,
-        #     temperature=0.5,
-        #     max_tokens=150
-        # )
-        
-        parsed_response = completion.choices[0].message.content
-        
-        return parsed_response
+        html = response.text
 
     except requests.RequestException as e:
         return f"Error fetching the page: {e}"
     except Exception as e:
         return f"Error processing the request: {e}"
 
+    return html
 
 
+def parse_html(url, html):
+    # Use BeautifulSoup to extract text content from HTML, removing all tags.
+    soup = BeautifulSoup(html, 'html.parser')
+    text_content = soup.get_text(separator=' ', strip=True)
+
+    # Truncate the text content to avoid exceeding the token limit
+    # You might need to adjust the max_length based on your model's limits and the average length of prompts.
+    max_length = 4000  # Example length, adjust as needed
+    truncated_text = text_content[:max_length]
+
+    prompt = f"""
+    Given the text content from '{truncated_text}', identify the title of the webpage, the website's name, and the publication date. 
+    Look for any indications of the date, and convert it into the format DD.MM.YYYY. Do not invent any information, ensure it exists.
+    Format the output as: Url, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted.
+    """
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+    )
+
+    parsed_response = completion.choices[0].message.content
+
+    return parsed_response
+
+
+
+def fetch_and_parse_content(url):
+    html = get_html(url)
+    parsed = parse_html(url, html)
+    return parsed
 
 if __name__ == "__main__":
     server_address = ('', 8000)
