@@ -191,7 +191,7 @@ def parse_html(url, html):
     prompt = f"""
     Given the text content from '{truncated_text}', identify the title of the webpage, the website's name, and the publication date. 
     Look for any indications of the date, and convert it into the format DD.MM.YYYY. Do not invent any information, ensure it exists.
-    Format the output as: Url, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted.
+    Format the output strictly as: {url}, Title, Website Name, Publication Date. Ensure the publication date is correctly recognized and formatted.
     """
 
     completion = client.chat.completions.create(
